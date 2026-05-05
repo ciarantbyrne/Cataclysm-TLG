@@ -70,23 +70,11 @@
     "use_action": [ "BREAK_STICK" ],
     "category": "spare_parts",
     "melee_damage": { "bash": 18 },
-	"skillbased_name": [
+	"skillbased_names": [
       {
-		"type": "VAR",
-        "name": { "str": "test1" },
-		"description": "test description 1"
-      },
-	  {
-	    "type": "FLAG",
+		"type": "FLAG",
 		"condition": "FIREWOOD",
-        "name": { "str": "test2" },
-		"description": "test description 2"
-      },
-	  {
-	    "type": "FLAG",
-		"condition": "NO_SALVAGE",
-        "name": { "str": "test3" },
-		"description": "test description 3"
+        "name": { "str": "test1" }
       }
     ]
   },
