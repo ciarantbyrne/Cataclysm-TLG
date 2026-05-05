@@ -1228,6 +1228,24 @@ struct conditional_name {
     void deserialize( const JsonObject &jo );
 };
 
+
+struct skillbased_name {
+    //using conditional name enum for now to make this simpler, shouldn't get in each other's ways
+    condition_type type;
+    //what skill to test
+    std::string condition;
+    //value of the condition
+    std::string value;
+
+    //idk how the translation works yet so figure that out i guess
+    translation name;
+    // idk if this should be a string either or a translation
+    std::string description;
+
+    bool was_loaded = false;
+    void deserialize(const JsonObject& jo);
+};
+
 class islot_milling
 {
     public:
@@ -1329,6 +1347,9 @@ struct itype {
 
         // A list of conditional names, in order of ascending priority.
         std::vector<conditional_name> conditional_names;
+
+        // Skill based variant tests
+        std::vector<skillbased_name> skillbased_names;
 
         /** Base damage output when thrown */
         damage_instance thrown_damage;

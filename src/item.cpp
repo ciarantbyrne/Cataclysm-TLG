@@ -15503,7 +15503,7 @@ bool item::is_reloadable() const
 }
 
 std::string item::type_name( unsigned int quantity, bool use_variant, bool use_cond_name,
-                             bool use_corpse ) const
+                             bool use_corpse , bool use_skillbased_names) const
 {
     const auto iter = item_vars.find( "name" );
     std::string ret_name;
@@ -15522,6 +15522,8 @@ std::string item::type_name( unsigned int quantity, bool use_variant, bool use_c
     } else {
         ret_name = type->nname( quantity );
     }
+
+    // NAME OVERRIDES:
 
     // Apply conditional names, in order.
     std::vector<conditional_name> const &cond_names =
@@ -15589,16 +15591,52 @@ std::string item::type_name( unsigned int quantity, bool use_variant, bool use_c
         }
     }
 
-    // Identify who this corpse belonged to, if applicable.
-    if( corpse != nullptr && use_corpse && has_flag( flag_CORPSE ) ) {
-        if( corpse_name.empty() ) {
-            //~ %1$s: name of corpse with modifiers;  %2$s: species name
-            ret_name = string_format( pgettext( "corpse ownership qualifier", "%1$s of a %2$s" ),
-                                      ret_name, corpse->nname() );
-        } else {
-            //~ %1$s: name of corpse with modifiers;  %2$s: proper name;  %3$s: species name
-            ret_name = string_format( pgettext( "corpse ownership qualifier", "%1$s of %2$s, %3$s" ),
-                                      ret_name, corpse_name, corpse->nname() );
+
+    // Apply SKILLBASED names, in order. copied from the conditional names code above
+    std::vector<skillbased_name> const& sb_names =
+        use_skillbased_names ? type->skillbased_names : std::vector<skillbased_name>{};
+
+    std::string appended;
+    if (sb_names != std::vector<skillbased_name>{})
+    {
+
+        for (const skillbased_name& sb_name : sb_names) {
+            /*ret_name = string_format(sb_name.name.translated(quantity), ret_name);*/
+
+            // Check skills, flags, etc. for each entry and apply names/desc/etc. if valid
+            switch (sb_name.type) {
+            case condition_type::FLAG:
+                if (has_flag(flag_id(sb_name.condition))) {
+                    appended += string_format(sb_name.name.translated(quantity), ret_name);
+                }
+                break;
+                /*case condition_type::VAR:
+                    if (has_var(sb_name.condition) && get_var(sb_name.condition) == sb_name.value) {
+                        appended += string_format(sb_name.name.translated(quantity), ret_name);
+                    }
+                    break;*/
+            case condition_type::VAR:
+                appended += string_format(sb_name.name.translated(quantity), ret_name);
+                break;
+            case condition_type::num_condition_types:
+                break;
+            }
+
+            if (appended != ret_name) ret_name = appended;
+        }
+
+        // Identify who this corpse belonged to, if applicable.
+        if (corpse != nullptr && use_corpse && has_flag(flag_CORPSE)) {
+            if (corpse_name.empty()) {
+                //~ %1$s: name of corpse with modifiers;  %2$s: species name
+                ret_name = string_format(pgettext("corpse ownership qualifier", "%1$s of a %2$s"),
+                    ret_name, corpse->nname());
+            }
+            else {
+                //~ %1$s: name of corpse with modifiers;  %2$s: proper name;  %3$s: species name
+                ret_name = string_format(pgettext("corpse ownership qualifier", "%1$s of %2$s, %3$s"),
+                    ret_name, corpse_name, corpse->nname());
+            }
         }
     }
 
@@ -15681,7 +15719,7 @@ bool item::has_label() const
 }
 
 std::string item::label( unsigned int quantity, bool use_variant,
-                         bool use_cond_name, bool use_corpse ) const
+                         bool use_cond_name, bool use_corpse , bool use_override_names) const
 {
     if( has_label() ) {
         return get_var( "item_label" );

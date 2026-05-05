@@ -2234,6 +2234,19 @@ void conditional_name::deserialize( const JsonObject &jo )
     }
 }
 
+void skillbased_name::deserialize(const JsonObject& jo)
+{
+    optional(jo, was_loaded, "type", type);
+    optional(jo, was_loaded, "condition", condition);
+    optional(jo, was_loaded, "value", value);
+
+    optional(jo, was_loaded, "description", description);
+    name = translation(translation::plural_tag());
+    if (!jo.read("name", name)) {
+        jo.throw_error("name unspecified for skillbased name");
+    }
+}
+
 bool Item_factory::check_ammo_type( std::string &msg, const ammotype &ammo ) const
 {
     if( ammo.is_null() ) {
@@ -4188,6 +4201,8 @@ void itype::load( const JsonObject &jo, std::string_view src )
     mandatory( jo, was_loaded, "name", name );
     optional( jo, was_loaded, "conditional_names", conditional_names );
     optional( jo, was_loaded, "description", description );
+    //testing this
+    optional( jo, was_loaded, "skillbased_names", skillbased_names );
     //ACTION (use_function)
     optional( jo, was_loaded, "use_action", use_methods, use_function_reader_map{ ammo_scale, src } );
     optional( jo, was_loaded, "tick_action", tick_action, use_function_reader_map{ ammo_scale, src } );

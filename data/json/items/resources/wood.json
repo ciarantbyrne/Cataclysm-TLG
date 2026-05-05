@@ -58,7 +58,7 @@
     "symbol": "/",
     "color": "brown",
     "name": { "str": "long stick" },
-    "description": "An unworked length of wood, half again the height of a man.  It's quite unwieldy in its current state..",
+    "description": "An unworked length of wood, half again the height of a man.  It's quite unwieldy in its current state.",
     "material": [ "wood" ],
     "techniques": [ "WBLOCK_1" ],
     "flags": [ "TRADER_AVOID", "FIREWOOD", "REACH_ATTACK" ],
@@ -69,7 +69,26 @@
     "to_hit": { "grip": "solid", "length": "long", "surface": "any", "balance": "uneven" },
     "use_action": [ "BREAK_STICK" ],
     "category": "spare_parts",
-    "melee_damage": { "bash": 18 }
+    "melee_damage": { "bash": 18 },
+	"skillbased_name": [
+      {
+		"type": "VAR",
+        "name": { "str": "test1" },
+		"description": "test description 1"
+      },
+	  {
+	    "type": "FLAG",
+		"condition": "FIREWOOD",
+        "name": { "str": "test2" },
+		"description": "test description 2"
+      },
+	  {
+	    "type": "FLAG",
+		"condition": "NO_SALVAGE",
+        "name": { "str": "test3" },
+		"description": "test description 3"
+      }
+    ]
   },
   {
     "type": "ITEM",
