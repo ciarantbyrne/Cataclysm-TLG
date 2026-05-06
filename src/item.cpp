@@ -15596,20 +15596,16 @@ std::string item::type_name( unsigned int quantity, bool use_variant, bool use_c
     std::vector<skillbased_name> const& sb_names =
         use_skillbased_names ? type->skillbased_names : std::vector<skillbased_name>{};
 
-    std::string appended;
-
     // This intentionally gets whoever it is *right now*- the description should
     // change if you change characters
     Character &pc = get_player_character();
     skill_id skill_to_check;
     for (const skillbased_name& sb_name : sb_names) {
-        /*ret_name = string_format(sb_name.name.translated(quantity), ret_name);*/
-
         // Check skills, flags, etc. for each entry and apply names/desc/etc. if valid
         switch (sb_name.type) {
             case condition_type::FLAG:
                 if (has_flag(flag_id(sb_name.condition))) {
-                    appended = string_format(sb_name.name.translated(quantity), ret_name);
+                    ret_name = string_format(sb_name.name.translated(quantity), ret_name);
                 }
                 break;
             case condition_type::VAR:
@@ -15618,14 +15614,12 @@ std::string item::type_name( unsigned int quantity, bool use_variant, bool use_c
                 if (pc.get_greater_skill_or_knowledge_level( skill_to_check )
                     >= std::stof( sb_name.value ))
                 {
-                    appended = sb_name.name.translated(quantity);
+                    ret_name = string_format(sb_name.name.translated(quantity), ret_name);
                 }
                 break;
             case condition_type::num_condition_types:
                 break;
         }
-
-        ret_name = appended;
     }
 
     // Identify who this corpse belonged to, if applicable.
