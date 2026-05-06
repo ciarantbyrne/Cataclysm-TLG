@@ -1236,6 +1236,8 @@ struct skillbased_name {
     std::string condition;
     //value of the condition
     std::string value;
+    // Should this description apply if the character knows how to craft it?
+    bool skip_if_recipe_known;
 
     //idk how the translation works yet so figure that out i guess
     translation name;

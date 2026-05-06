@@ -71,10 +71,17 @@
     "category": "spare_parts",
     "melee_damage": { "bash": 18 },
 	"skillbased_names": [
-      {
-		"type": "FLAG",
-		"condition": "FIREWOOD",
-        "name": { "str": "test1" }
+	  {
+		"type": "VAR",
+		"condition": "survival",
+		"value": "1",
+        "name": { "str": "test2!!!" }
+      },
+	  {
+		"type": "VAR",
+		"condition": "survival",
+		"value": "3",
+        "name": { "str": "test" }
       }
     ]
   },

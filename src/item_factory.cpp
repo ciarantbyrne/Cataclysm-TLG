@@ -2239,6 +2239,7 @@ void skillbased_name::deserialize(const JsonObject& jo)
     optional(jo, was_loaded, "type", type);
     optional(jo, was_loaded, "condition", condition);
     optional(jo, was_loaded, "value", value);
+    optional(jo, was_loaded, "skip_if_recipe_known", skip_if_recipe_known);
 
     optional(jo, was_loaded, "description", description);
     name = translation(translation::plural_tag());
