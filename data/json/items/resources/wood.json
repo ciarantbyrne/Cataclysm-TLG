@@ -69,21 +69,7 @@
     "to_hit": { "grip": "solid", "length": "long", "surface": "any", "balance": "uneven" },
     "use_action": [ "BREAK_STICK" ],
     "category": "spare_parts",
-    "melee_damage": { "bash": 18 },
-	"skillbased_names": [
-	  {
-		"type": "VAR",
-		"condition": "survival",
-		"value": "1",
-        "name": { "str": "test2!!!" }
-      },
-	  {
-		"type": "VAR",
-		"condition": "survival",
-		"value": "3",
-        "name": { "str": "test" }
-      }
-    ]
+    "melee_damage": { "bash": 18 }
   },
   {
     "type": "ITEM",

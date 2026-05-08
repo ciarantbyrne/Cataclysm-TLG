@@ -2234,17 +2234,18 @@ void conditional_name::deserialize( const JsonObject &jo )
     }
 }
 
-void skillbased_name::deserialize(const JsonObject& jo)
+void subjective_name::deserialize(const JsonObject& jo)
 {
     optional(jo, was_loaded, "type", type);
     optional(jo, was_loaded, "condition", condition);
     optional(jo, was_loaded, "value", value);
     optional(jo, was_loaded, "skip_if_recipe_known", skip_if_recipe_known);
-
+    // A replacement name does not need to be specified, even if many entries will use one
+    bool name_present;
+    optional(jo, name_present = was_loaded, "name", name);
     optional(jo, was_loaded, "description", description);
-    name = translation(translation::plural_tag());
-    if (!jo.read("name", name)) {
-        jo.throw_error("name unspecified for skillbased name");
+    if (name_present) {
+        name = translation(translation::plural_tag());
     }
 }
 
@@ -4202,8 +4203,7 @@ void itype::load( const JsonObject &jo, std::string_view src )
     mandatory( jo, was_loaded, "name", name );
     optional( jo, was_loaded, "conditional_names", conditional_names );
     optional( jo, was_loaded, "description", description );
-    //testing this
-    optional( jo, was_loaded, "skillbased_names", skillbased_names );
+    optional( jo, was_loaded, "subjective_names", subjective_names );
     //ACTION (use_function)
     optional( jo, was_loaded, "use_action", use_methods, use_function_reader_map{ ammo_scale, src } );
     optional( jo, was_loaded, "tick_action", tick_action, use_function_reader_map{ ammo_scale, src } );

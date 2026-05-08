@@ -15503,7 +15503,7 @@ bool item::is_reloadable() const
 }
 
 std::string item::type_name( unsigned int quantity, bool use_variant, bool use_cond_name,
-                             bool use_corpse , bool use_skillbased_names) const
+                             bool use_corpse , bool use_subjective_names) const
 {
     const auto iter = item_vars.find( "name" );
     std::string ret_name;
@@ -15592,32 +15592,70 @@ std::string item::type_name( unsigned int quantity, bool use_variant, bool use_c
     }
 
 
-    // Apply SKILLBASED names, in order. copied from the conditional names code above
-    std::vector<skillbased_name> const& sb_names =
-        use_skillbased_names ? type->skillbased_names : std::vector<skillbased_name>{};
+    // Apply SUBJECTIVE names, in order. copied from the conditional names code above
+    std::vector<subjective_name> const& s_names =
+        use_subjective_names ? type->subjective_names : std::vector<subjective_name>{};
 
-    // This intentionally gets whoever it is *right now*- the description should
+    // This intentionally gets whoever it is *right now*- the details should
     // change if you change characters
     Character &pc = get_player_character();
+    flag_id flag_to_check;
     skill_id skill_to_check;
-    for (const skillbased_name& sb_name : sb_names) {
+    trait_id mutation_to_check;
+    for (const subjective_name& s_name : s_names) {
         // Check skills, flags, etc. for each entry and apply names/desc/etc. if valid
-        switch (sb_name.type) {
-            case condition_type::FLAG:
-                if (has_flag(flag_id(sb_name.condition))) {
-                    ret_name = string_format(sb_name.name.translated(quantity), ret_name);
-                }
-                break;
-            case condition_type::VAR:
-                skill_to_check = skill_id( sb_name.condition );
-                if (!skill_to_check.is_empty() && !skill_to_check.is_valid()) break;
+        switch (s_name.type) {
+            case subjective_name_type::P_SKILL:
+                skill_to_check = skill_id(s_name.condition);
+                if (skill_to_check.is_empty() || !skill_to_check.is_valid()) break;
                 if (pc.get_greater_skill_or_knowledge_level( skill_to_check )
-                    >= std::stof( sb_name.value ))
+                >= std::stof( s_name.value ))
                 {
-                    ret_name = string_format(sb_name.name.translated(quantity), ret_name);
+                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
                 }
                 break;
-            case condition_type::num_condition_types:
+            case subjective_name_type::P_STR:
+                if (pc.get_str() >= std::stof(s_name.value))
+                {
+                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
+                }
+                break;
+            case subjective_name_type::P_DEX:
+                if (pc.get_dex() >= std::stof(s_name.value))
+                {
+                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
+                }
+                break;
+            case subjective_name_type::P_INT:
+                if (pc.get_int() >= std::stof(s_name.value))
+                {
+                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
+                }
+                break;
+            case subjective_name_type::P_PER:
+                if (pc.get_per() >= std::stof(s_name.value))
+                {
+                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
+                }
+                break;
+            case subjective_name_type::P_PROFESSION:
+                break;
+            case subjective_name_type::P_FLAG:
+                flag_to_check = flag_id(s_name.condition);
+                if (flag_to_check.is_empty() || !flag_to_check.is_valid()) break;
+                if (pc.has_flag(flag_to_check)) {
+                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
+                }
+                break;
+            case subjective_name_type::P_MUTATION:
+                mutation_to_check = trait_id(s_name.condition);
+                if (mutation_to_check.is_empty() || !mutation_to_check.is_valid()) break;
+                if (pc.has_active_mutation(mutation_to_check))
+                {
+                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
+                }
+                break;
+            case subjective_name_type::num_subjective_name_types:
                 break;
         }
     }

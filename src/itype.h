@@ -1207,6 +1207,19 @@ enum condition_type {
     num_condition_types
 };
 
+enum subjective_name_type {
+    P_SKILL,
+    P_STR,
+    P_DEX,
+    P_INT,
+    P_PER,
+    P_PROFESSION,
+    P_FLAG,
+    P_MUTATION,
+    P_VAR,
+    num_subjective_name_types
+};
+
 template<>
 struct enum_traits<condition_type> {
     static constexpr condition_type last = condition_type::num_condition_types;
@@ -1228,21 +1241,27 @@ struct conditional_name {
     void deserialize( const JsonObject &jo );
 };
 
+template<>
+struct enum_traits<subjective_name_type> {
+    static constexpr subjective_name_type last = subjective_name_type::num_subjective_name_types;
+};
 
-struct skillbased_name {
+struct subjective_name {
     //using conditional name enum for now to make this simpler, shouldn't get in each other's ways
-    condition_type type;
+    subjective_name_type type;
     //what skill to test
     std::string condition;
     //value of the condition
     std::string value;
     // Should this description apply if the character knows how to craft it?
-    bool skip_if_recipe_known;
+    bool skip_if_recipe_known = true;
 
     //idk how the translation works yet so figure that out i guess
     translation name;
     // idk if this should be a string either or a translation
     std::string description;
+    // Should the description be appended to the default one (including variant/conditional text), rather than replacing it?
+    bool append_description = false;
 
     bool was_loaded = false;
     void deserialize(const JsonObject& jo);
@@ -1350,8 +1369,8 @@ struct itype {
         // A list of conditional names, in order of ascending priority.
         std::vector<conditional_name> conditional_names;
 
-        // Skill based variant tests
-        std::vector<skillbased_name> skillbased_names;
+        // Player-attribute-based variant tests
+        std::vector<subjective_name> subjective_names;
 
         /** Base damage output when thrown */
         damage_instance thrown_damage;
