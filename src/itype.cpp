@@ -66,23 +66,23 @@ template<>
 std::string enum_to_string<subjective_name_type>(subjective_name_type data)
 {
     switch (data) {
-    case subjective_name_type::P_SKILL:
+    case subjective_name_type::SUBJ_SKILL:
         return "SKILL";
-    case subjective_name_type::P_STR:
+    case subjective_name_type::SUBJ_STR:
         return "STR";
-    case subjective_name_type::P_DEX:
+    case subjective_name_type::SUBJ_DEX:
         return "DEX";
-    case subjective_name_type::P_INT:
+    case subjective_name_type::SUBJ_INT:
         return "INT";
-    case subjective_name_type::P_PER:
+    case subjective_name_type::SUBJ_PER:
         return "PER";
-    case subjective_name_type::P_PROFESSION:
+    case subjective_name_type::SUBJ_PROFESSION:
         return "PROFESSION";
-    case subjective_name_type::P_FLAG:
+    case subjective_name_type::SUBJ_FLAG:
         return "FLAG";
-    case subjective_name_type::P_MUTATION:
+    case subjective_name_type::SUBJ_MUTATION:
         return "MUTATION";
-    case subjective_name_type::P_VAR:
+    case subjective_name_type::SUBJ_VAR:
         return "VAR";
     case subjective_name_type::num_subjective_name_types:
         break;

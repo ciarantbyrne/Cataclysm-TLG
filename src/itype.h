@@ -1208,15 +1208,15 @@ enum condition_type {
 };
 
 enum subjective_name_type {
-    P_SKILL,
-    P_STR,
-    P_DEX,
-    P_INT,
-    P_PER,
-    P_PROFESSION,
-    P_FLAG,
-    P_MUTATION,
-    P_VAR,
+    SUBJ_SKILL,
+    SUBJ_STR,
+    SUBJ_DEX,
+    SUBJ_INT,
+    SUBJ_PER,
+    SUBJ_PROFESSION,
+    SUBJ_FLAG,
+    SUBJ_MUTATION,
+    SUBJ_VAR,
     num_subjective_name_types
 };
 

@@ -15596,16 +15596,17 @@ std::string item::type_name( unsigned int quantity, bool use_variant, bool use_c
     std::vector<subjective_name> const& s_names =
         use_subjective_names ? type->subjective_names : std::vector<subjective_name>{};
 
-    // This intentionally gets whoever it is *right now*- the details should
+    // This intentionally gets whoever it is *right now*- the details can and should
     // change if you change characters
     Character &pc = get_player_character();
-    flag_id flag_to_check;
-    skill_id skill_to_check;
-    trait_id mutation_to_check;
+    static flag_id flag_to_check;
+    static skill_id skill_to_check;
+    static trait_id mutation_to_check;
+    // JSON priority bottom to top
     for (const subjective_name& s_name : s_names) {
         // Check skills, flags, etc. for each entry and apply names/desc/etc. if valid
         switch (s_name.type) {
-            case subjective_name_type::P_SKILL:
+            case subjective_name_type::SUBJ_SKILL:
                 skill_to_check = skill_id(s_name.condition);
                 if (skill_to_check.is_empty() || !skill_to_check.is_valid()) break;
                 if (pc.get_greater_skill_or_knowledge_level( skill_to_check )
@@ -15614,45 +15615,48 @@ std::string item::type_name( unsigned int quantity, bool use_variant, bool use_c
                     ret_name = string_format(s_name.name.translated(quantity), ret_name);
                 }
                 break;
-            case subjective_name_type::P_STR:
+            case subjective_name_type::SUBJ_STR:
                 if (pc.get_str() >= std::stof(s_name.value))
                 {
                     ret_name = string_format(s_name.name.translated(quantity), ret_name);
                 }
                 break;
-            case subjective_name_type::P_DEX:
+            case subjective_name_type::SUBJ_DEX:
                 if (pc.get_dex() >= std::stof(s_name.value))
                 {
                     ret_name = string_format(s_name.name.translated(quantity), ret_name);
                 }
                 break;
-            case subjective_name_type::P_INT:
+            case subjective_name_type::SUBJ_INT:
                 if (pc.get_int() >= std::stof(s_name.value))
                 {
                     ret_name = string_format(s_name.name.translated(quantity), ret_name);
                 }
                 break;
-            case subjective_name_type::P_PER:
+            case subjective_name_type::SUBJ_PER:
                 if (pc.get_per() >= std::stof(s_name.value))
                 {
                     ret_name = string_format(s_name.name.translated(quantity), ret_name);
                 }
                 break;
-            case subjective_name_type::P_PROFESSION:
+            case subjective_name_type::SUBJ_PROFESSION:
                 break;
-            case subjective_name_type::P_FLAG:
+            case subjective_name_type::SUBJ_FLAG:
                 flag_to_check = flag_id(s_name.condition);
                 if (flag_to_check.is_empty() || !flag_to_check.is_valid()) break;
                 if (pc.has_flag(flag_to_check)) {
                     ret_name = string_format(s_name.name.translated(quantity), ret_name);
                 }
                 break;
-            case subjective_name_type::P_MUTATION:
+            case subjective_name_type::SUBJ_MUTATION:
                 mutation_to_check = trait_id(s_name.condition);
-                if (mutation_to_check.is_empty() || !mutation_to_check.is_valid()) break;
-                if (pc.has_active_mutation(mutation_to_check))
+                for (trait_id tid : pc.get_mutations())
                 {
-                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
+                    if (tid == mutation_to_check)
+                    { 
+                        ret_name = string_format(s_name.name.translated(quantity), ret_name);
+                        break;
+                    }
                 }
                 break;
             case subjective_name_type::num_subjective_name_types:
