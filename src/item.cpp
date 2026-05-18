@@ -15503,7 +15503,7 @@ bool item::is_reloadable() const
 }
 
 std::string item::type_name( unsigned int quantity, bool use_variant, bool use_cond_name,
-                             bool use_corpse ) const
+                             bool use_corpse , bool use_subjective_names) const
 {
     const auto iter = item_vars.find( "name" );
     std::string ret_name;
@@ -15522,6 +15522,8 @@ std::string item::type_name( unsigned int quantity, bool use_variant, bool use_c
     } else {
         ret_name = type->nname( quantity );
     }
+
+    // NAME OVERRIDES:
 
     // Apply conditional names, in order.
     std::vector<conditional_name> const &cond_names =
@@ -15589,16 +15591,90 @@ std::string item::type_name( unsigned int quantity, bool use_variant, bool use_c
         }
     }
 
+
+    // Apply SUBJECTIVE names, in order. copied from the conditional names code above
+    std::vector<subjective_name> const& s_names =
+        use_subjective_names ? type->subjective_names : std::vector<subjective_name>{};
+
+    // This intentionally gets whoever it is *right now*- the details can and should
+    // change if you change characters
+    Character &pc = get_player_character();
+    static flag_id flag_to_check;
+    static skill_id skill_to_check;
+    static trait_id mutation_to_check;
+    // JSON priority bottom to top
+    for (const subjective_name& s_name : s_names) {
+        // Check skills, flags, etc. for each entry and apply names/desc/etc. if valid
+        switch (s_name.type) {
+            case subjective_name_type::SUBJ_SKILL:
+                skill_to_check = skill_id(s_name.condition);
+                if (skill_to_check.is_empty() || !skill_to_check.is_valid()) break;
+                if (pc.get_greater_skill_or_knowledge_level( skill_to_check )
+                >= std::stof( s_name.value ))
+                {
+                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
+                }
+                break;
+            case subjective_name_type::SUBJ_STR:
+                if (pc.get_str() >= std::stof(s_name.value))
+                {
+                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
+                }
+                break;
+            case subjective_name_type::SUBJ_DEX:
+                if (pc.get_dex() >= std::stof(s_name.value))
+                {
+                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
+                }
+                break;
+            case subjective_name_type::SUBJ_INT:
+                if (pc.get_int() >= std::stof(s_name.value))
+                {
+                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
+                }
+                break;
+            case subjective_name_type::SUBJ_PER:
+                if (pc.get_per() >= std::stof(s_name.value))
+                {
+                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
+                }
+                break;
+            case subjective_name_type::SUBJ_PROFESSION:
+                break;
+            case subjective_name_type::SUBJ_FLAG:
+                flag_to_check = flag_id(s_name.condition);
+                if (flag_to_check.is_empty() || !flag_to_check.is_valid()) break;
+                if (pc.has_flag(flag_to_check)) {
+                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
+                }
+                break;
+            case subjective_name_type::SUBJ_MUTATION:
+                mutation_to_check = trait_id(s_name.condition);
+                for (trait_id tid : pc.get_mutations())
+                {
+                    if (tid == mutation_to_check)
+                    { 
+                        ret_name = string_format(s_name.name.translated(quantity), ret_name);
+                        break;
+                    }
+                }
+                break;
+            case subjective_name_type::num_subjective_name_types:
+                break;
+        }
+    }
+
     // Identify who this corpse belonged to, if applicable.
-    if( corpse != nullptr && use_corpse && has_flag( flag_CORPSE ) ) {
-        if( corpse_name.empty() ) {
+    if (corpse != nullptr && use_corpse && has_flag(flag_CORPSE)) {
+        if (corpse_name.empty()) {
             //~ %1$s: name of corpse with modifiers;  %2$s: species name
-            ret_name = string_format( pgettext( "corpse ownership qualifier", "%1$s of a %2$s" ),
-                                      ret_name, corpse->nname() );
-        } else {
+            ret_name = string_format(pgettext("corpse ownership qualifier", "%1$s of a %2$s"),
+                ret_name, corpse->nname());
+        }
+        else {
             //~ %1$s: name of corpse with modifiers;  %2$s: proper name;  %3$s: species name
-            ret_name = string_format( pgettext( "corpse ownership qualifier", "%1$s of %2$s, %3$s" ),
-                                      ret_name, corpse_name, corpse->nname() );
+            ret_name = string_format(pgettext("corpse ownership qualifier", "%1$s of %2$s, %3$s"),
+                ret_name, corpse_name, corpse->nname());
         }
     }
 
@@ -15681,7 +15757,7 @@ bool item::has_label() const
 }
 
 std::string item::label( unsigned int quantity, bool use_variant,
-                         bool use_cond_name, bool use_corpse ) const
+                         bool use_cond_name, bool use_corpse , bool use_override_names) const
 {
     if( has_label() ) {
         return get_var( "item_label" );
