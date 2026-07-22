@@ -63,6 +63,7 @@ class relic;
 struct part_material;
 struct armor_portion_data;
 struct itype_variant_data;
+struct subjective_info;
 struct islot_comestible;
 struct itype;
 struct item_comp;
@@ -1959,7 +1960,7 @@ class item : public visitable
          * character tried to wear).
          */
         std::string type_name( unsigned int quantity = 1, bool use_variant = true,
-                               bool use_cond_name = true, bool use_corpse = true , bool use_subjective_names = true) const;
+                               bool use_cond_name = true, bool use_corpse = true , bool use_subjective = true) const;
 
         /**
          * Number of (charges of) this item that fit into the given volume.
@@ -2505,6 +2506,30 @@ class item : public visitable
 
         // Description of the item provided by the variant, or an empty string
         std::string variant_description() const;
+
+        /*
+        * SUBJECTIVES BELOW
+        */
+
+        /**
+         * Does this item have any subjective info entries associated with it?
+         */
+        bool has_subjective_info() const;
+
+        /**
+         * The (current?) subjective intro entry associated with this item
+         */
+        const subjective_info& subjective_info_cur() const;
+
+        /**
+         * Set the active subjective info of this item (or set it to none)
+         */
+        void set_subjective_info(bool reapply = true);
+
+        void clear_subjective_info();
+
+        // Description of the item provided by the active subjective info entry, or an empty string
+        std::string subjective_description() const;
 
         /**
          * Quantity of shots in the gun. Looks at both ammo and available energy.
@@ -3256,14 +3281,17 @@ class item : public visitable
         // Select a random variant from the possibilities
         // Intended to be called when no explicit variant is set
         void select_itype_variant();
-
         bool can_have_itype_variant() const;
+        bool possible_itype_variant( const std::string &test ) const; // Does this have a variant with this id?
+        const itype_variant_data* _itype_variant = nullptr; // If the item has a variant, this points to it
 
-        // Does this have a variant with this id?
-        bool possible_itype_variant( const std::string &test ) const;
-
-        // If the item has a gun variant, this points to it
-        const itype_variant_data *_itype_variant = nullptr;
+        // Select a random subjective info entry from the possibilities
+        void select_subjective_info();
+        bool can_have_subjective_info() const;
+        // Tests if a subjective info entry exists w/ given ID
+        bool possible_subjective_info(const std::string& test) const;
+        // If the item has an subjective info entry currently applied, this points to it
+        const subjective_info* _subj = nullptr;
 
         /**
          * Data for items that represent in-progress crafts.

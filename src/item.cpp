@@ -405,6 +405,10 @@ item::item( const itype *type, time_point turn, int qty ) : type( type ), bday( 
         set_var( "description", SNIPPET.expand( variant_description() ) );
     }
 
+    if (has_subjective_info() && !subjective_info_cur().description.empty()) {
+        set_var("description", subjective_description());
+    }
+
     if( current_phase == phase_id::PNULL ) {
         current_phase = type->phase;
     }
@@ -2332,6 +2336,8 @@ void item::basic_info( std::vector<iteminfo> &info, const iteminfo_query *parts,
             info.emplace_back( "DESCRIPTION", idescription->second.str() );
         } else if( has_itype_variant() ) {
             info.emplace_back( "DESCRIPTION", variant_description() );
+        } else if (has_subjective_info() && !subjective_description().empty()) {
+            info.emplace_back("DESCRIPTION", subjective_description());
         } else {
             if( has_flag( flag_MAGIC_FOCUS ) ) {
                 info.emplace_back( "DESCRIPTION",
@@ -9959,7 +9965,7 @@ bool item::has_itype_variant() const
     return true;
 }
 
-const itype_variant_data &item::itype_variant() const
+const itype_variant_data & item::itype_variant() const
 {
     return *_itype_variant;
 }
@@ -10007,6 +10013,183 @@ void item::clear_itype_variant()
 {
     _itype_variant = nullptr;
 }
+
+/*
+* SUBJECTIVE INFO SECTION
+*/
+
+// I don't think this one is gonna actually be relevant to subjective info entries,
+// but it's copied over from the variantss for completion sake. Delete later if needed
+void item::select_subjective_info()
+{
+    weighted_int_list<std::string> infos;
+    for (const subjective_info& subj : type->subjective_infos) {
+        infos.add(subj.id, subj.weight);
+    }
+
+    const std::string* selected = infos.pick();
+    if (!selected) {
+        // No subjective info entries exist
+        return;
+    }
+
+    set_subjective_info(true);
+}
+
+bool item::can_have_subjective_info() const
+{
+    return !type->subjective_infos.empty();
+}
+
+bool item::possible_subjective_info(const std::string& test) const
+{
+    if (!can_have_subjective_info()) {
+        return false;
+    }
+
+    const auto subj_looking_for = [&test](const subjective_info& subj) {
+        return subj.id == test;
+        };
+
+    return std::find_if(type->subjective_infos.begin(), type->subjective_infos.end(),
+        subj_looking_for) != type->subjective_infos.end();
+}
+
+bool item::has_subjective_info() const
+{
+    if (_subj == nullptr) {
+        return false;
+    }
+    return true;
+}
+
+const subjective_info& item::subjective_info_cur() const
+{
+    return *_subj;
+}
+
+// This re-evaluates all subjective info entries for the item, and sets one if any are applicable
+// It also resets _subj each time, so if it's called with _subj set to something, it has to be
+// reset here or it will change _subj to a nullptr!
+void item::set_subjective_info(bool reapply)
+{
+    // If this was called with an item with no subjective info entries, just return
+    if (!can_have_subjective_info()) {
+        return;
+    }
+
+    _subj = nullptr;
+
+    // This intentionally gets whoever it is *right now*- the details can and should
+    // change if you change characters
+    Character& pc = get_player_character();
+    static flag_id flag_to_check;
+    static skill_id skill_to_check;
+    static trait_id mutation_to_check;
+    
+    for (const subjective_info& option : type->subjective_infos) {
+        /*if (option.expand_snippets) {
+                set_var("description", SNIPPET.expand(variant_description()));
+            }*/
+
+            // Check skills, flags, etc. for each entry and enable bool to apply names/desc/etc. if valid
+        switch (option.type) {
+        case subjective_info_type::SUBJ_SKILL:
+            skill_to_check = skill_id(option.condition);
+            if (skill_to_check.is_empty() || !skill_to_check.is_valid()) break;
+            if (pc.get_greater_skill_or_knowledge_level(skill_to_check)
+                >= std::stof(option.value))
+            {
+                _subj = &option;
+            }
+            break;
+        case subjective_info_type::SUBJ_STR:
+            if (pc.get_str() >= std::stof(option.value))
+            {
+                _subj = &option;
+            }
+            break;
+        case subjective_info_type::SUBJ_DEX:
+            if (pc.get_dex() >= std::stof(option.value))
+            {
+                _subj = &option;
+            }
+            break;
+        case subjective_info_type::SUBJ_INT:
+            if (pc.get_int() >= std::stof(option.value))
+            {
+                _subj = &option;
+            }
+            break;
+        case subjective_info_type::SUBJ_PER:
+            if (pc.get_per() >= std::stof(option.value))
+            {
+                _subj = &option;
+            }
+            break;
+        case subjective_info_type::SUBJ_PROFESSION:
+            break;
+        case subjective_info_type::SUBJ_FLAG:
+            flag_to_check = flag_id(option.condition);
+            if (flag_to_check.is_empty() || !flag_to_check.is_valid()) break;
+            if (pc.has_flag(flag_to_check)) {
+                _subj = &option;
+            }
+            break;
+        case subjective_info_type::SUBJ_MUTATION:
+            mutation_to_check = trait_id(option.condition);
+            for (trait_id tid : pc.get_mutations())
+            {
+                if (tid == mutation_to_check)
+                {
+                    _subj = &option;
+                    break;
+                }
+            }
+            break;
+        case subjective_info_type::num_subjective_info_types:
+            // Default catch-all
+            debugmsg("item '%s' has no valid subjective info entry with id '%s'!", typeId().str(), option.id);
+            break;
+        }
+    }
+
+    if (reapply)
+    {
+        // description
+        if (_subj->description.empty()) {
+            set_var("description", _subj->description);
+        }
+        else
+        {
+            set_var("description", type->description.translated());
+        }
+    }
+}
+
+std::string item::subjective_description() const
+{
+    if (!has_subjective_info()) {
+        return "";
+    }
+
+    // append the description instead of fully overwriting it
+
+    // you might need to change "subjective description" to "variant description", not super sure what that function is
+    if (subjective_info_cur().append_description) {
+        return string_format(pgettext("subjective description", "%s  %s"), type->description.translated(),
+            subjective_info_cur().description);
+    }
+    else {
+        return subjective_info_cur().description;
+    }
+}
+
+void item::clear_subjective_info()
+{
+    _subj = nullptr;
+}
+
 
 bool item::is_firearm() const
 {
@@ -15503,7 +15686,7 @@ bool item::is_reloadable() const
 }
 
 std::string item::type_name( unsigned int quantity, bool use_variant, bool use_cond_name,
-                             bool use_corpse , bool use_subjective_names) const
+                             bool use_subjective, bool use_corpse) const
 {
     const auto iter = item_vars.find( "name" );
     std::string ret_name;
@@ -15591,77 +15774,9 @@ std::string item::type_name( unsigned int quantity, bool use_variant, bool use_c
         }
     }
 
-
-    // Apply SUBJECTIVE names, in order. copied from the conditional names code above
-    std::vector<subjective_name> const& s_names =
-        use_subjective_names ? type->subjective_names : std::vector<subjective_name>{};
-
-    // This intentionally gets whoever it is *right now*- the details can and should
-    // change if you change characters
-    Character &pc = get_player_character();
-    static flag_id flag_to_check;
-    static skill_id skill_to_check;
-    static trait_id mutation_to_check;
-    // JSON priority bottom to top
-    for (const subjective_name& s_name : s_names) {
-        // Check skills, flags, etc. for each entry and apply names/desc/etc. if valid
-        switch (s_name.type) {
-            case subjective_name_type::SUBJ_SKILL:
-                skill_to_check = skill_id(s_name.condition);
-                if (skill_to_check.is_empty() || !skill_to_check.is_valid()) break;
-                if (pc.get_greater_skill_or_knowledge_level( skill_to_check )
-                >= std::stof( s_name.value ))
-                {
-                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
-                }
-                break;
-            case subjective_name_type::SUBJ_STR:
-                if (pc.get_str() >= std::stof(s_name.value))
-                {
-                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
-                }
-                break;
-            case subjective_name_type::SUBJ_DEX:
-                if (pc.get_dex() >= std::stof(s_name.value))
-                {
-                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
-                }
-                break;
-            case subjective_name_type::SUBJ_INT:
-                if (pc.get_int() >= std::stof(s_name.value))
-                {
-                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
-                }
-                break;
-            case subjective_name_type::SUBJ_PER:
-                if (pc.get_per() >= std::stof(s_name.value))
-                {
-                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
-                }
-                break;
-            case subjective_name_type::SUBJ_PROFESSION:
-                break;
-            case subjective_name_type::SUBJ_FLAG:
-                flag_to_check = flag_id(s_name.condition);
-                if (flag_to_check.is_empty() || !flag_to_check.is_valid()) break;
-                if (pc.has_flag(flag_to_check)) {
-                    ret_name = string_format(s_name.name.translated(quantity), ret_name);
-                }
-                break;
-            case subjective_name_type::SUBJ_MUTATION:
-                mutation_to_check = trait_id(s_name.condition);
-                for (trait_id tid : pc.get_mutations())
-                {
-                    if (tid == mutation_to_check)
-                    { 
-                        ret_name = string_format(s_name.name.translated(quantity), ret_name);
-                        break;
-                    }
-                }
-                break;
-            case subjective_name_type::num_subjective_name_types:
-                break;
-        }
+    if (use_subjective && has_subjective_info())
+    {
+        ret_name = subjective_info_cur().name.translated(quantity);
     }
 
     // Identify who this corpse belonged to, if applicable.
@@ -15757,13 +15872,13 @@ bool item::has_label() const
 }
 
 std::string item::label( unsigned int quantity, bool use_variant,
-                         bool use_cond_name, bool use_corpse , bool use_override_names) const
+                         bool use_cond_name, bool use_subjective_name, bool use_corpse) const
 {
     if( has_label() ) {
         return get_var( "item_label" );
     }
 
-    return type_name( quantity, use_variant, use_cond_name, use_corpse );
+    return type_name( quantity, use_variant, use_cond_name, use_subjective_name, use_corpse );
 }
 
 bool item::has_infinite_charges() const

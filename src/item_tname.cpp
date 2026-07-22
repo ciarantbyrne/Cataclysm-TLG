@@ -170,6 +170,7 @@ std::string label( item const &it, unsigned int quantity, segment_bitset const &
     if( !it.is_craft() ) {
         return it.label( quantity, segments[tname::segments::VARIANT],
                          ( segments & tname::tname_conditional ) == tname::tname_conditional,
+                         segments[tname::segments::SUBJECTIVE],
                          segments[tname::segments::CORPSE] );
     }
     return {};
@@ -737,6 +738,7 @@ std::string enum_to_string<tname::segments>( tname::segments seg )
         case tname::segments::last_segment: return "last_segment";
         case tname::segments::VARIANT: return "VARIANT";
         case tname::segments::COMPONENTS: return "COMPONENTS";
+        case tname::segments::SUBJECTIVE: return "SUBJECTIVE";
         case tname::segments::CORPSE: return "CORPSE";
         case tname::segments::CONTENTS_FULL: return "CONTENTS_FULL";
         case tname::segments::CONTENTS_ABREV: return "CONTENTS_ABBREV";

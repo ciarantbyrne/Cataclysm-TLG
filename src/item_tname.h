@@ -61,6 +61,7 @@ enum class segments : std::size_t {
     // separate flags for TYPE
     VARIANT,
     COMPONENTS,
+    SUBJECTIVE,
     CORPSE,
 
     // separate flags for CONTENTS
@@ -119,6 +120,8 @@ constexpr uint64_t base_item_name_bits =
     1ULL << static_cast<size_t>( tname::segments::CUSTOM_ITEM_SUFFIX );
 constexpr uint64_t variant_bits =
     1ULL << static_cast<size_t>( tname::segments::VARIANT );
+constexpr uint64_t subjective_bits =
+    1ULL << static_cast<size_t>(tname::segments::SUBJECTIVE);
 constexpr segment_bitset default_tname( default_tname_bits );
 constexpr segment_bitset unprefixed_tname( default_tname_bits & ~tname_prefix_bits );
 constexpr segment_bitset tname_sort_key( default_tname_bits & ~tname_unsortable_bits );
@@ -132,7 +135,7 @@ constexpr segment_bitset base_item_name( base_item_name_bits );
 // Name of a specific item in the game world, carries the item identity, and will not
 // change in a normal playthrough except through exordinary means (e.g. via `iuse_transform`).
 // E.g. "XL green socks" (notably, not "|. XL green socks (filthy)")
-constexpr segment_bitset item_identity_name( base_item_name_bits | variant_bits );
+constexpr segment_bitset item_identity_name( base_item_name_bits | variant_bits | subjective_bits );
 
 } // namespace tname
 
