@@ -58,7 +58,7 @@
     "symbol": "/",
     "color": "brown",
     "name": { "str": "long stick" },
-    "description": "An unworked length of wood, half again the height of a man.  It's quite unwieldy in its current state..",
+    "description": "An unworked length of wood, half again the height of a man.  It's quite unwieldy in its current state.",
     "material": [ "wood" ],
     "techniques": [ "WBLOCK_1" ],
     "flags": [ "TRADER_AVOID", "FIREWOOD", "REACH_ATTACK" ],

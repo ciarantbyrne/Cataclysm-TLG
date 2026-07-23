@@ -1976,7 +1976,7 @@ class item : public visitable
          * character tried to wear).
          */
         std::string type_name( unsigned int quantity = 1, bool use_variant = true,
-                               bool use_cond_name = true, bool use_corpse = true ) const;
+                               bool use_cond_name = true, bool use_corpse = true , bool use_subjective_names = true) const;
 
         /**
          * Number of (charges of) this item that fit into the given volume.
@@ -2919,7 +2919,7 @@ class item : public visitable
         * Returns label from "item_label" itemvar and quantity
         */
         std::string label( unsigned int quantity = 0, bool use_variant = true,
-                           bool use_cond_name = true, bool use_corpse = true ) const;
+                           bool use_cond_name = true, bool use_corpse = true , bool use_subjective_names = true) const;
 
         bool has_infinite_charges() const;
 
